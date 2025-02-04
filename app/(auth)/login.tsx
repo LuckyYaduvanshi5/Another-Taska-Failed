@@ -1,33 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
-import { useState } from 'react';
-import { router } from 'expo-router';
-import { authService } from '../../src/services/supabase/auth';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { Link } from 'expo-router';
 
-export default function Login() {
+export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  
+  const { signIn } = useAuth();
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setLoading(true);
     try {
-      const { error: loginError } = await authService.signIn(email, password);
-      if (!loginError) {
-        router.replace('/(main)/dashboard');
-      } else {
-        setError('Invalid email or password');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('An error occurred during login');
+      setLoading(true);
+      setError(null);
+      await signIn(email, password);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -37,52 +28,38 @@ export default function Login() {
     <View style={styles.container}>
       <Text variant="headlineMedium" style={styles.title}>Welcome Back</Text>
       
-      {error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : null}
+      {error && <Text style={styles.error}>{error}</Text>}
       
       <TextInput
         label="Email"
         value={email}
-        onChangeText={(text: string) => {
-          setEmail(text);
-          setError('');
-        }}
-        mode="outlined"
-        style={styles.input}
-        keyboardType="email-address"
+        onChangeText={setEmail}
         autoCapitalize="none"
-        error={!!error}
+        keyboardType="email-address"
+        style={styles.input}
       />
       
       <TextInput
         label="Password"
         value={password}
-        onChangeText={(text: string) => {
-          setPassword(text);
-          setError('');
-        }}
-        mode="outlined"
-        style={styles.input}
+        onChangeText={setPassword}
         secureTextEntry
-        error={!!error}
+        style={styles.input}
       />
       
-      <Button 
-        mode="contained" 
+      <Button
+        mode="contained"
         onPress={handleLogin}
         loading={loading}
+        disabled={loading}
         style={styles.button}
       >
-        Login
+        Log In
       </Button>
       
-      <Button 
-        mode="text" 
-        onPress={() => router.push('/(auth)/signup')}
-      >
-        Don't have an account? Sign Up
-      </Button>
+      <Link href="/(auth)/signup" asChild>
+        <Button mode="text">Don't have an account? Sign Up</Button>
+      </Link>
     </View>
   );
 }
@@ -95,18 +72,18 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   input: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   button: {
-    marginTop: 12,
-    marginBottom: 12,
+    marginTop: 8,
+    marginBottom: 16,
   },
-  errorText: {
-    color: '#B00020',
+  error: {
+    color: 'red',
+    marginBottom: 16,
     textAlign: 'center',
-    marginBottom: 12,
   },
 }); 

@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface Props {
   children: ReactNode;
@@ -8,13 +7,12 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error: Error | null;
+  error?: Error;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false,
-    error: null,
+    hasError: false
   };
 
   public static getDerivedStateFromError(error: Error): State {
@@ -25,23 +23,12 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Uncaught error:', error, errorInfo);
   }
 
-  private handleReset = () => {
-    this.setState({ hasError: false, error: null });
-  };
-
   public render() {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
-          <Text variant="headlineMedium" style={styles.title}>
-            Oops! Something went wrong
-          </Text>
-          <Text style={styles.message}>
-            {this.state.error?.message || 'An unexpected error occurred'}
-          </Text>
-          <Button mode="contained" onPress={this.handleReset} style={styles.button}>
-            Try Again
-          </Button>
+          <Text style={styles.text}>Something went wrong.</Text>
+          <Text style={styles.errorText}>{this.state.error?.message}</Text>
         </View>
       );
     }
@@ -57,15 +44,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  title: {
-    marginBottom: 12,
+  text: {
+    fontSize: 18,
+    marginBottom: 10,
   },
-  message: {
-    marginBottom: 24,
+  errorText: {
+    color: 'red',
     textAlign: 'center',
-    opacity: 0.7,
-  },
-  button: {
-    minWidth: 120,
   },
 }); 

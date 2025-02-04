@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { List, Text } from 'react-native-paper';
-import { Database } from '../../types/database';
+import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { List, Text, IconButton } from 'react-native-paper';
+import { supabase } from '../../services/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import { Database } from '../../../src/types/database';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 
@@ -10,58 +12,95 @@ interface TaskListProps {
   onTaskPress: (task: Task) => void;
 }
 
-export function TaskList({ tasks, onTaskPress }: TaskListProps) {
-  if (tasks.length === 0) {
+export const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskPress }) => {
+  const [tasksState, setTasksState] = React.useState<Task[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const { session } = useAuth();
+  
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', session?.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTasksState(data || []);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const toggleTask = async (taskId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId);
+
+      if (error) throw error;
+      
+      await fetchTasks(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
+
+  if (loading) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text>No tasks found</Text>
+      <View style={styles.empty}>
+        <Text>Loading tasks...</Text>
       </View>
     );
   }
 
-  const renderItem = ({ item: task }: { item: Task }) => (
-    <List.Item
-      title={task.title}
-      description={task.description}
-      left={props => (
-        <List.Icon
-          {...props}
-          icon={task.status === 'completed' ? 'check-circle' : 'circle-outline'}
-        />
-      )}
-      right={props => (
-        <Text {...props} style={[props.style, styles.priority]}>
-          Priority: {task.priority}
-        </Text>
-      )}
-      onPress={() => onTaskPress(task)}
-    />
-  );
+  if (tasksState.length === 0) {
+    return (
+      <View style={styles.empty}>
+        <Text>No tasks for today</Text>
+      </View>
+    );
+  }
 
   return (
-    <FlatList
-      data={tasks}
-      renderItem={renderItem}
-      keyExtractor={item => item.id}
-      style={styles.list}
-      contentContainerStyle={styles.listContent}
-    />
+    <View>
+      {tasksState.map(task => (
+        <List.Item
+          key={task.id}
+          title={task.title}
+          description={task.description}
+          left={props => (
+            <IconButton
+              icon={task.status === 'completed' ? 'checkbox-marked' : 'checkbox-blank-outline'}
+              onPress={() => toggleTask(task.id, task.status)}
+            />
+          )}
+          right={props => (
+            <IconButton
+              icon="dots-vertical"
+              onPress={() => {
+                // TODO: Implement task options menu
+              }}
+            />
+          )}
+        />
+      ))}
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  empty: {
+    padding: 16,
     alignItems: 'center',
-  },
-  priority: {
-    alignSelf: 'center',
   },
 }); 

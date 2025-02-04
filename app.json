@@ -1,17 +1,19 @@
 {
   "expo": {
-    "name": "Productivity App",
-    "slug": "productivity-app",
+    "name": "Taska",
+    "slug": "Taska",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -21,16 +23,11 @@
         "backgroundColor": "#ffffff"
       }
     },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "plugins": [
-      "expo-router",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#ffffff"
-        }
-      ]
-    ],
-    "scheme": "productivity-app"
+      "expo-router"
+    ]
   }
 }

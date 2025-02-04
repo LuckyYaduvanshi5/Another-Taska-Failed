@@ -45,7 +45,7 @@ export const notificationService = {
       },
       trigger: {
         seconds: duration * 60,
-      },
+      } as Notifications.NotificationTriggerInput,
     });
     return id;
   },

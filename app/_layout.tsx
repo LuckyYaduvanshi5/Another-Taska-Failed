@@ -1,10 +1,14 @@
-import React from 'react';
+import * as React from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
 import { useEffect } from 'react';
 import { ErrorBoundary } from '../src/components/common/ErrorBoundary';
+import { SplashScreen } from 'expo-router';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 // Navigation guard component
 function NavigationGuard({ children }: { children: React.ReactNode }) {
@@ -29,19 +33,17 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function RootLayoutNav({ children }: { children: React.ReactNode }) {
+function RootLayoutNav() {
   const { theme } = useTheme();
 
   return (
     <PaperProvider theme={theme}>
       <NavigationGuard>
         <Stack screenOptions={{ headerShown: false }}>
-          {children}
           <Stack.Screen 
             name="(auth)" 
             options={{ 
               headerShown: false,
-              // Prevent going back to auth screens
               gestureEnabled: false 
             }} 
           />
@@ -49,7 +51,6 @@ function RootLayoutNav({ children }: { children: React.ReactNode }) {
             name="(main)" 
             options={{ 
               headerShown: false,
-              // Prevent going back to auth screens
               gestureEnabled: false 
             }} 
           />

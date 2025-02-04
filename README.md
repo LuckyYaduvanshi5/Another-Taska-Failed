@@ -51,7 +51,7 @@ A modern task management and focus timer application built with React Native and
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/LuckyYaduvanshi5/Taska.git
+git clone https://github.com/yourusername/productivity-app.git
 cd productivity-app
 ```
 

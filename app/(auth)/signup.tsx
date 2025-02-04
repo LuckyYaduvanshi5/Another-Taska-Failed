@@ -1,37 +1,39 @@
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
-import { useState } from 'react';
-import { router } from 'expo-router';
-import { authService } from '../../src/services/supabase/auth';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { Link } from 'expo-router';
 
-export default function SignUp() {
+export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  
+  const { signUp } = useAuth();
 
-  const handleSignUp = async () => {
-    if (!email || !password || !fullName) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
+  const handleSignup = async () => {
     try {
-      const { error } = await authService.signUp(email, password, fullName);
-      if (!error) {
-        router.replace('/(main)/dashboard');
+      setLoading(true);
+      setError(null);
+
+      // Basic validation
+      if (!email || !password) {
+        throw new Error('Please fill in all fields');
       }
-    } catch (error) {
-      setError('Error creating account');
+      if (password !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+      }
+
+      await signUp(email, password);
+      // Note: Supabase will send a confirmation email by default
+      setError('Please check your email to confirm your account');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -41,61 +43,46 @@ export default function SignUp() {
     <View style={styles.container}>
       <Text variant="headlineMedium" style={styles.title}>Create Account</Text>
       
-      {error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : null}
+      {error && <Text style={styles.error}>{error}</Text>}
       
-      <TextInput
-        label="Full Name"
-        value={fullName}
-        onChangeText={(text) => {
-          setFullName(text);
-          setError('');
-        }}
-        mode="outlined"
-        style={styles.input}
-      />
-
       <TextInput
         label="Email"
         value={email}
-        onChangeText={(text) => {
-          setEmail(text);
-          setError('');
-        }}
-        mode="outlined"
-        style={styles.input}
-        keyboardType="email-address"
+        onChangeText={setEmail}
         autoCapitalize="none"
+        keyboardType="email-address"
+        style={styles.input}
       />
       
       <TextInput
         label="Password"
         value={password}
-        onChangeText={(text) => {
-          setPassword(text);
-          setError('');
-        }}
-        mode="outlined"
-        style={styles.input}
+        onChangeText={setPassword}
         secureTextEntry
+        style={styles.input}
+      />
+
+      <TextInput
+        label="Confirm Password"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+        style={styles.input}
       />
       
-      <Button 
-        mode="contained" 
-        onPress={handleSignUp}
+      <Button
+        mode="contained"
+        onPress={handleSignup}
         loading={loading}
+        disabled={loading}
         style={styles.button}
       >
         Sign Up
       </Button>
       
-      <Button 
-        mode="text" 
-        onPress={() => router.push('/(auth)/login')}
-      >
-        Already have an account? Login
-      </Button>
+      <Link href="/(auth)/login" asChild>
+        <Button mode="text">Already have an account? Log In</Button>
+      </Link>
     </View>
   );
 }
@@ -108,18 +95,18 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   input: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   button: {
-    marginTop: 12,
-    marginBottom: 12,
+    marginTop: 8,
+    marginBottom: 16,
   },
-  errorText: {
-    color: '#B00020',
+  error: {
+    color: 'red',
+    marginBottom: 16,
     textAlign: 'center',
-    marginBottom: 12,
   },
 }); 
