@@ -1,9 +1,22 @@
 import 'react-native-url-polyfill/auto';
 
-if (typeof global.setImmediate === 'undefined') {
-  global.setImmediate = (fn, ...args) => setTimeout(fn, 0, ...args);
+declare global {
+  function setImmediate(callback: (...args: any[]) => void, ...args: any[]): number;
+  function clearImmediate(id: number): void;
 }
 
+// @ts-ignore
+if (typeof global.setImmediate === 'undefined') {
+  // @ts-ignore
+  global.setImmediate = function(callback, ...args) {
+    return setTimeout(callback, 0, ...args);
+  };
+}
+
+// @ts-ignore
 if (typeof global.clearImmediate === 'undefined') {
-  global.clearImmediate = (id) => clearTimeout(id);
+  // @ts-ignore
+  global.clearImmediate = function(id) {
+    clearTimeout(id);
+  };
 }

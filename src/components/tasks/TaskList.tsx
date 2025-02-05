@@ -3,17 +3,17 @@ import { View, StyleSheet } from 'react-native';
 import { List, Text, IconButton } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { Database } from '../../../src/types/database';
 
-type Task = Database['public']['Tables']['tasks']['Row'];
+type Task = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: 'pending' | 'completed';
+  priority: number;
+};
 
-interface TaskListProps {
-  tasks: Task[];
-  onTaskPress: (task: Task) => void;
-}
-
-export const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskPress }) => {
-  const [tasksState, setTasksState] = React.useState<Task[]>([]);
+export function TaskList() {
+  const [tasks, setTasks] = React.useState<Task[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { session } = useAuth();
   
@@ -30,7 +30,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskPress }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTasksState(data || []);
+      setTasks(data || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
@@ -63,7 +63,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskPress }) => {
     );
   }
 
-  if (tasksState.length === 0) {
+  if (tasks.length === 0) {
     return (
       <View style={styles.empty}>
         <Text>No tasks for today</Text>
@@ -73,7 +73,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskPress }) => {
 
   return (
     <View>
-      {tasksState.map(task => (
+      {tasks.map(task => (
         <List.Item
           key={task.id}
           title={task.title}
@@ -96,7 +96,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskPress }) => {
       ))}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   empty: {
